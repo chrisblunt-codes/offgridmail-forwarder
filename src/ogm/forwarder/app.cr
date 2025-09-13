@@ -25,6 +25,8 @@ module OGM::Forwarder
       Signal::TERM.trap { puts "→ SIGTERM received, shutting down…"; listener.stop }
 
       listener.run
+      # after accept loop exits, wait for a short drain period
+      listener.wait_for_drain(10.seconds)
       puts "Shutdown complete."
     end
   end

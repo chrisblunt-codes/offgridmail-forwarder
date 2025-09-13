@@ -1,26 +1,33 @@
 # Copyright 2025 Chris Blunt
 # Licensed under the Apache License, Version 2.0
 
-require "socket"
-require "./config"
-
 module OGM::Forwarder
-  # Handles one downstream client connection and proxies to upstream.
   class Session
+    @target : TCPSocket? = nil
+    @closed = Atomic(Bool).new(false)
+
     def initialize(
-      @client     : TCPSocket,
-      @selector   : UpstreamSelector,
-      @rw_timeout : Time::Span
+      @client       : TCPSocket,
+      @selector     : UpstreamSelector,
+      @rw_timeout   : Time::Span
     )
     end
 
-    # Establish upstream and start bidirectional proxy.
     def run
       target = @selector.connect
+      @target = target
       bidi_proxy(@client, target, @rw_timeout)
     rescue ex
       puts "Session error: #{ex.message}"
+    ensure
+      force_close
+    end
+
+    # allow Listener to kill lingering sessions
+    def force_close
+      return if @closed.swap(true)
       @client.close rescue nil
+      @target.try &.close rescue nil
     end
 
     private def bidi_proxy(client : TCPSocket, target : TCPSocket, rw_timeout : Time::Span)

@@ -17,7 +17,7 @@ nc -l -p 2526
 
 # run the forwarder
 PRIMARY=127.0.0.1:2526 BACKUP=127.0.0.1:2527 \
-LISTEN_PORT=2525 crystal run src/ogm_forwarder.cr
+LISTEN_PORT=2525 crystal run src/ogm_forwarder_app.cr
 
 # in another terminal, connect as a client
 nc 127.0.0.1 2525
@@ -51,7 +51,7 @@ shards install
 crystal spec        # if/when specs exist
 crystal run src/ogm_forwarder.cr -- --help
 # build a release binary
-crystal build --release src/ogm_forwarder.cr -o bin/ogm-forwarder
+crystal build --release src/ogm_forwarder_app.cr -o bin/ogm-forwarder
 ```
 
 ## Contributing

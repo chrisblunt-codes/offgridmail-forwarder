@@ -17,7 +17,4 @@ require "./ogm/forwarder/**"
 module OGM::Forwarder
   # Current library version.
   VERSION = "0.1.0"
-
-  cfg = CLI.parse
-  App.run(cfg)
 end

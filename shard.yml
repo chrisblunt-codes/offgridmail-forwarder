@@ -10,7 +10,7 @@ description: >
 
 targets:
   offgridmail-forwarder:
-    main: src/offgridmail-forwarder.cr
+    main: src/offgridmail_forwarder_app.cr
 
 crystal: '>= 1.17.0'
 

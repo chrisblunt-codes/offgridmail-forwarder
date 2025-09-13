@@ -4,9 +4,10 @@
 module OGM::Forwarder
   class Listener
     @server : TCPServer? = nil
-    @stopping   = false
-    @lock       = Mutex.new
-    @sessions   = Set(Session).new
+    @stopping     = false
+    @lock         = Mutex.new
+    @sessions     = Set(Session).new
+    @seq          = 0_i64
 
     def initialize(@cfg : Config, @selector : UpstreamSelector)
     end
@@ -24,7 +25,8 @@ module OGM::Forwarder
           raise ex
         end
 
-        session = Session.new(client, @selector, @cfg.rw_timeout)
+        id = next_id
+        session = Session.new(id, client, @selector, @cfg.rw_timeout)
         track_add(session)
 
         spawn do
@@ -70,6 +72,10 @@ module OGM::Forwarder
       else
         puts "All sessions drained."
       end
+    end
+
+    private def next_id : Int64
+      @lock.synchronize { @seq += 1; @seq }
     end
 
     private def track_add(s : Session)

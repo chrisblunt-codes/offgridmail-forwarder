@@ -1,0 +1,17 @@
+name: offgridmail-forwarder
+version: 0.1.0
+
+authors:
+  - Chris Blunt <dev@chrisblunt.me>
+
+description: >
+  OffgridMail Forwarder (OGM Forwarder) — a lightweight TCP/Serial forwarder with failover. 
+  Part of the OffgridMail suite.
+
+targets:
+  offgridmail-forwarder:
+    main: src/offgridmail-forwarder.cr
+
+crystal: '>= 1.17.0'
+
+license: Apache-2.0

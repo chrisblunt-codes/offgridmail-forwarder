@@ -1,0 +1,28 @@
+# Crystal build artifacts
+/.shards/
+/lib/
+/docs/
+/.crystal/
+/.crystal-version
+
+# Compiled binaries
+/*.dwarf
+/*.dSYM
+/*.exe
+/*.dll
+/*.so
+/*.dylib
+/*.a
+/*.o
+/bin/*
+
+# Editors
+*.swp
+*~
+.vscode/
+
+# Default Paths
+/data
+
+# Config
+.env

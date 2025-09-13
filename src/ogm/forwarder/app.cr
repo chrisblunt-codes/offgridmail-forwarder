@@ -19,7 +19,13 @@ module OGM::Forwarder
     # upstream hosts, and timeouts
     def self.run(cfg : Config)
       selector = UpstreamSelector.new(cfg)
-      Listener.new(cfg, selector).run
+      listener = Listener.new(cfg, selector)
+
+      Signal::INT.trap  { puts "→ SIGINT received, shutting down…";  listener.stop }
+      Signal::TERM.trap { puts "→ SIGTERM received, shutting down…"; listener.stop }
+
+      listener.run
+      puts "Shutdown complete."
     end
   end
 end

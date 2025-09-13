@@ -26,16 +26,17 @@ nc 127.0.0.1 2525
 ## Configuration
 
 ```
-.---------------------------------------------------------------------------------------------.
-| Setting          | ENV               | CLI                   | Default                      |
-| ---------------- | ----------------- | --------------------- | ---------------------------- |
-| Listen host      | `LISTEN_HOST`     | `-l`, `--listen HOST` | `127.0.0.1`                  |
-| Listen port      | `LISTEN_PORT`     | `-p`, `--port PORT`   | `2525`                       |
-| Primary upstream | `PRIMARY`         | `--primary HOST:PORT` | `mailserver1.example.com:25` |
-| Backup upstream  | `BACKUP`          | `--backup HOST:PORT`  | `mailserver2.example.com:25` |
-| Connect timeout  | `CONNECT_TIMEOUT` | —                     | `5` seconds                  |
-| RW timeout       | `RW_TIMEOUT`      | —                     | `120` seconds                |
-"---------------------------------------------------------------------------------------------'
+.----------------------------------------------------------------------------------------------.
+| Setting          | ENV               | CLI                    | Default                      |
+| ---------------- | ----------------- | ---------------------- | ---------------------------- |
+| Listen host      | `LISTEN_HOST`     | `-l`, `--listen HOST`  | `127.0.0.1`                  |
+| Listen port      | `LISTEN_PORT`     | `-p`, `--port PORT`    | `2525`                       |
+| Primary upstream | `PRIMARY`         | `--primary HOST:PORT`  | `mailserver1.example.com:25` |
+| Backup upstream  | `BACKUP`          | `--backup HOST:PORT`   | `mailserver2.example.com:25` |
+| Connect timeout  | `CONNECT_TIMEOUT` | —                      | `5` seconds                  |
+| RW timeout       | `RW_TIMEOUT`      | —                      | `120` seconds                |
+| Log level        | `LOG_LEVEL`       | `-q`, `-v`, `--silent` | `Info`                       |
+"----------------------------------------------------------------------------------------------'
 ```
 
 ## Documentation

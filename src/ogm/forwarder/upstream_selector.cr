@@ -1,7 +1,9 @@
 # Copyright 2025 Chris Blunt
 # Licensed under the Apache License, Version 2.0
 
+require "log"
 require "socket"
+
 require "./config"
 
 module OGM::Forwarder
@@ -17,15 +19,15 @@ module OGM::Forwarder
       begin
         sock = TCPSocket.new(cfg.primary.host, cfg.primary.port,
                              connect_timeout: cfg.connect_timeout)
-        puts "→ Using PRIMARY #{cfg.primary}"
+        Log.info { "Using PRIMARY #{cfg.primary}" }
         return sock
       rescue ex
-        puts "Primary failed: #{ex.message}"
+        Log.warn { "Primary failed: #{ex.message}" }
       end
 
       sock = TCPSocket.new(cfg.backup.host, cfg.backup.port,
                            connect_timeout: cfg.connect_timeout)
-      puts "→ Using BACKUP  #{cfg.backup}"
+      Log.info { "Using BACKUP #{cfg.backup}" }
       sock
     end
   end

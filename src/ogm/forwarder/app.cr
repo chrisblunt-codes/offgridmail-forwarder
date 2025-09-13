@@ -1,7 +1,7 @@
 # Copyright 2025 Chris Blunt
 # Licensed under the Apache License, Version 2.0
 
-require "socket"
+require "log"
 
 require "./config"
 require "./upstream_selector"
@@ -18,6 +18,10 @@ module OGM::Forwarder
     # @param cfg [Config] runtime configuration with listen address,
     # upstream hosts, and timeouts
     def self.run(cfg : Config)
+      Log.setup do |c|
+        c.bind "*", level: cfg.log_level, backend: Log::IOBackend.new(STDERR)
+      end
+
       selector = UpstreamSelector.new(cfg)
       listener = Listener.new(cfg, selector)
 
@@ -27,7 +31,7 @@ module OGM::Forwarder
       listener.run
       # after accept loop exits, wait for a short drain period
       listener.wait_for_drain(10.seconds)
-      puts "Shutdown complete."
+      Log.info { "Shutdown complete." }
     end
   end
 end

@@ -1,6 +1,8 @@
 # Copyright 2025 Chris Blunt
 # Licensed under the Apache License, Version 2.0
 
+require "log"
+
 module OGM::Forwarder
   class Listener
     @server : TCPServer? = nil
@@ -14,7 +16,7 @@ module OGM::Forwarder
 
     def run
       @server = TCPServer.new(@cfg.listen_host, @cfg.listen_port)
-      puts "Listening on #{@cfg.listen_host}:#{@cfg.listen_port} (primary: #{@cfg.primary}, backup: #{@cfg.backup})"
+      Log.info { "Listening on #{@cfg.listen_host}:#{@cfg.listen_port} (primary: #{@cfg.primary}, backup: #{@cfg.backup})" }
 
       loop do
         break if @stopping
@@ -54,23 +56,23 @@ module OGM::Forwarder
       deadline = Time.monotonic + grace
       n = active_sessions
       
-      puts "Draining #{n} active session(s) for up to #{grace.total_seconds.to_i}s…" if n > 0
+      Log.info { "Draining #{n} active session(s) for up to #{grace.total_seconds.to_i}s…" } if n > 0
 
       while (n = active_sessions) > 0 && Time.monotonic < deadline
         remaining = deadline - Time.monotonic
-        puts "#{n} active session(s) remaining (#{remaining.total_seconds.to_i}s remaining)"
+        Log.debug { "#{n} active session(s) remaining (#{remaining.total_seconds.to_i}s remaining)" }
         sleep interval
       end
 
       if (n = active_sessions) > 0
-        puts "Grace ended; forcing close on #{n} session(s)..."
+        Log.info { "Grace ended; forcing close on #{n} session(s)..." }
         force_close_all
         t_end = Time.monotonic + hard_kill_wait
         while active_sessions > 0 && Time.monotonic < t_end
           sleep 0.05.seconds
         end
       else
-        puts "All sessions drained."
+        Log.info { "All sessions drained." }
       end
     end
 

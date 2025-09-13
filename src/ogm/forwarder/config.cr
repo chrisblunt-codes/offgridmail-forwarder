@@ -1,6 +1,8 @@
 # Copyright 2025 Chris Blunt
 # Licensed under the Apache License, Version 2.0
 
+require "log"
+
 module OGM::Forwarder
   # Represents a host/port pair (e.g. "mail.example.com:25").
   #
@@ -31,6 +33,7 @@ module OGM::Forwarder
     getter backup           : HostPort
     getter connect_timeout  : Time::Span
     getter rw_timeout       : Time::Span
+    getter log_level        : Log::Severity
 
     def initialize(
       @listen_host          : String,
@@ -38,7 +41,8 @@ module OGM::Forwarder
       @primary              : HostPort,
       @backup               : HostPort,
       @connect_timeout      : Time::Span,
-      @rw_timeout           : Time::Span
+      @rw_timeout           : Time::Span,
+      @log_level            : Log::Severity
     ); end
   end
 end

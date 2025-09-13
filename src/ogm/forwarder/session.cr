@@ -1,6 +1,8 @@
 # Copyright 2025 Chris Blunt
 # Licensed under the Apache License, Version 2.0
 
+require "log"
+
 module OGM::Forwarder
   class Session
     @target : TCPSocket? = nil
@@ -16,16 +18,16 @@ module OGM::Forwarder
 
     def run
       started = Time.monotonic
-      puts "[##{@id}] start"
+      Log.debug { "[##{@id}] start" }
 
       target = @selector.connect
       @target = target
 
       c_bytes, t_bytes = bidi_proxy(@client, target, @rw_timeout)
       dur = (Time.monotonic - started).total_seconds
-      puts "[##{@id}] ended. duration=#{dur.round(3)}s  c→t=#{c_bytes}B  t→c=#{t_bytes}B"
+      Log.debug { "[##{@id}] ended. duration=#{dur.round(3)}s  c→t=#{c_bytes}B  t→c=#{t_bytes}B" }
     rescue ex
-      puts "Session error: #{ex.message}"
+      Log.warn { "##{@id}] Session error: #{ex.message}" }
     ensure
       force_close
     end
@@ -52,7 +54,7 @@ module OGM::Forwarder
         begin
           bytes = IO.copy(client, target)
         rescue ex
-          puts "[##{@id}] c→t ended: #{ex.message}"
+          Log.debug { "[##{@id}] c→t ended: #{ex.message}" }
         ensure
           target.close rescue nil
           c2t_done.send(bytes)
@@ -65,7 +67,7 @@ module OGM::Forwarder
         begin
           bytes = IO.copy(target, client)
         rescue ex
-          puts "[##{@id}] t→c ended: #{ex.message}"
+          Log.debug { "[##{@id}] t→c ended: #{ex.message}" }
         ensure
           client.close rescue nil
           t2c_done.send(bytes)

@@ -13,6 +13,7 @@ require "./ogm/forwarder/**"
 #   require "offgridmail-forwarder"
 #   OGM::Forwarder::App.run(OGM::Forwarder::CLI.parse)
 #
+# See architecture notes: design/ARCHITECTURE.md
 module OGM::Forwarder
   # Current library version.
   VERSION = "0.1.0"

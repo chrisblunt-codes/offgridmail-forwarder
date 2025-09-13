@@ -2,6 +2,9 @@
 # Licensed under the Apache License, Version 2.0
 
 module OGM::Forwarder
+  # Represents a host/port pair (e.g. "mail.example.com:25").
+  #
+  # Parsed from ENV or CLI and used for connecting to upstream servers.
   struct HostPort
     getter host : String
     getter port : Int32
@@ -18,6 +21,9 @@ module OGM::Forwarder
     end
   end
 
+  # Config stores all runtime settings
+  
+  # Collected from ENV and CLI.
   struct Config
     getter listen_host      : String
     getter listen_port      : Int32

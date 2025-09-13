@@ -7,7 +7,11 @@ require "./config"
 
 module OGM::Forwarder
   module CLI
-    # Build Config from ENV + CLI flags
+    # Parses environment variables and command-line flags
+    # and returns a Config instance.
+    #
+    # Defaults are taken from ENV, then overridden by any
+    # CLI arguments provided in `argv`.
     def self.parse(argv = ARGV) : Config
       listen_host = "127.0.0.1"
       listen_port = (ENV["LISTEN_PORT"]? || "2525").to_i

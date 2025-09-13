@@ -11,12 +11,12 @@ module OGM::Forwarder
     @sessions     = Set(Session).new
     @seq          = 0_i64
 
-    def initialize(@cfg : Config, @selector : UpstreamSelector)
+    def initialize(@cfg : Config, @upstream : Upstream)
     end
 
     def run
       @server = TCPServer.new(@cfg.listen_host, @cfg.listen_port)
-      Log.info { "Listening on #{@cfg.listen_host}:#{@cfg.listen_port} (primary: #{@cfg.primary}, backup: #{@cfg.backup})" }
+      log_settings
 
       loop do
         break if @stopping
@@ -28,7 +28,7 @@ module OGM::Forwarder
         end
 
         id = next_id
-        session = Session.new(id, client, @selector, @cfg.rw_timeout)
+        session = Session.new(id, client, @upstream, @cfg.rw_timeout)
         track_add(session)
 
         spawn do
@@ -74,6 +74,18 @@ module OGM::Forwarder
       else
         Log.info { "All sessions drained." }
       end
+    end
+
+    private def log_settings
+      listen_on = "Listening on [#{@cfg.listen_host}:#{@cfg.listen_port}]"
+
+      forward_to  = case @cfg.upstream_mode
+                    when UpstreamMode::Tcp
+                      "Forwarding to [#{@cfg.primary.host}:#{@cfg.primary.port}] or [#{@cfg.backup.host}:#{@cfg.backup.port}]"
+                    when UpstreamMode::Serial
+                      "Forwarding to [#{@cfg.serial_dev}]"
+                    end    
+      Log.info { "#{listen_on} and #{forward_to}" }
     end
 
     private def next_id : Int64

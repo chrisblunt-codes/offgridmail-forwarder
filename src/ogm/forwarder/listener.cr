@@ -22,10 +22,13 @@ module OGM::Forwarder
         break if @stopping
         begin
           client = @server.not_nil!.accept
+          client.tcp_nodelay = true
         rescue ex : IO::Error
           break if @stopping
           raise ex
         end
+        
+        puts "Accepted connection"
 
         id = next_id
         session = Session.new(id, client, @upstream, @cfg.rw_timeout)

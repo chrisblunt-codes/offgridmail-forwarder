@@ -4,14 +4,7 @@
 require "log"
 
 require "./upstream"
-
-{% if flag?(:unix) %}
-  require "./termios_helpers"
-{% end %}
-{% if flag?(:win32) %}
-  require "./serial_win"
-{% end %}
-
+require "./termios_helpers"
 
 module OGM::Forwarder
   # Serial upstream that opens a COM/TTY device and returns it as an `IO`
@@ -40,20 +33,9 @@ module OGM::Forwarder
         io = File.open(@dev, "r+")
         Serial.configure_fd(io.fd, @baud)
         io
-      {% elsif flag?(:win32) %}
-        dev = normalize_win_dev(@dev)
-        Log.info { "Opening serial #{dev} (baud #{@baud}) [Windows]" }
-        io = File.open(dev, "r+")
-        SerialWin.configure_file(io, @baud) # Win32 DCB/COMMTIMEOUTS
-        io
       {% else %}
         raise "SerialUpstream not implemented on this platform yet"
       {% end %}
-    end
-
-    private def normalize_win_dev(dev : String) : String
-      # Accept "COM3" or "\\.\COM3"
-      dev.starts_with?("\\\\.\\") ? dev : "\\\\.\\#{dev}"
     end
   end
 end

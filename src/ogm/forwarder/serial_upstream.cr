@@ -6,10 +6,13 @@ require "log"
 require "./upstream"
 
 {% if flag?(:unix) %}
-  require "./serial_port_unix"
+  require "./serial_posix"
+  require "./serial_posix_lines"
+  require "./serial_posix_io"
 {% end %}
+
 {% if flag?(:win32) %}
-  require "./serial_port_win"
+  require "./serial_win"
 {% end %}
 
 
@@ -36,16 +39,20 @@ module OGM::Forwarder
     def connect : IO
       {% if flag?(:unix) %}
         Log.info { "Opening serial #{@dev} (baud #{@baud})" }
+
         # Open read/write; assume external config for speed/flags.
-        io = File.open(@dev, "r+")
-        Serial.configure_fd(io.fd, @baud)
-        io
+        port = File.open(@dev, "r+")
+        port.sync = true
+        force_baud!(@dev, @baud)                    # via stty helper
+        SerialPosix.configure_port(port.fd, @baud)  # raw 8N1, no HW/SW flow, VMIN=1/VTIME=0
+        SerialPosixLines.assert_rts_dtr(port.fd)    # raise RTS/DTR once
+        serial = PosixSerialIO.new(port, port.fd)   # << return this
+        serial
       {% elsif flag?(:win32) %}
-        dev = normalize_win_dev(@dev)
-        Log.info { "Opening serial #{dev} (baud #{@baud}) [Windows]" }
-        io = File.open(dev, "r+")
-        SerialWin.configure_file(io, @baud) # Win32 DCB/COMMTIMEOUTS
-        io
+        Log.info { "Opening serial #{normalize_win_dev(@dev)} (baud #{@baud}) [Windows]" }
+
+        port = SerialWin.open_port(normalize_win_dev(@dev), @baud)
+        port
       {% else %}
         raise "SerialUpstream not implemented on this platform yet"
       {% end %}
@@ -54,6 +61,12 @@ module OGM::Forwarder
     private def normalize_win_dev(dev : String) : String
       # Accept "COM3" or "\\.\COM3"
       dev.starts_with?("\\\\.\\") ? dev : "\\\\.\\#{dev}"
+    end
+
+    private def force_baud!(dev : String, baud : Int32)
+      args = ["-F", dev, baud.to_s, "-ixon", "-ixoff", "-crtscts", "-opost", "cs8", "-cstopb", "-parenb", "-echo", "clocal"]
+      status = Process.run("stty", args: args)
+      raise "stty failed (exit #{status.exit_code})" unless status.success?
     end
   end
 end

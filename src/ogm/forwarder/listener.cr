@@ -81,7 +81,7 @@ module OGM::Forwarder
 
       forward_to  = case @cfg.upstream_mode
                     when UpstreamMode::Tcp
-                      "Forwarding to [#{@cfg.primary.to_s}] or [#{@cfg.backup.to_s}]"
+                      "Forwarding to [#{@cfg.primary.host}:#{@cfg.primary.port}] or [#{@cfg.backup.host}:#{@cfg.backup.port}]"
                     when UpstreamMode::Serial
                       "Forwarding to [#{@cfg.serial_dev}]"
                     end    

@@ -6,10 +6,10 @@ require "log"
 require "./upstream"
 
 {% if flag?(:unix) %}
-  require "./termios_helpers"
+  require "./serial_port_unix"
 {% end %}
 {% if flag?(:win32) %}
-  require "./serial_win"
+  require "./serial_port_win"
 {% end %}
 
 

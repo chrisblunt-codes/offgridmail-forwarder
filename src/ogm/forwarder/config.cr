@@ -4,12 +4,6 @@
 require "log"
 
 module OGM::Forwarder
-  # Supported upstream modes
-  enum UpstreamMode
-    Tcp
-    Serial
-  end
-  
   # Represents a host/port pair (e.g. "mail.example.com:25").
   #
   # Parsed from ENV or CLI and used for connecting to upstream servers.
@@ -40,9 +34,6 @@ module OGM::Forwarder
     getter connect_timeout  : Time::Span
     getter rw_timeout       : Time::Span
     getter log_level        : Log::Severity
-    getter upstream_mode    : UpstreamMode
-    getter serial_dev       : String
-    getter serial_baud      : Int32
 
     def initialize(
       @listen_host          : String,
@@ -51,10 +42,7 @@ module OGM::Forwarder
       @backup               : HostPort,
       @connect_timeout      : Time::Span,
       @rw_timeout           : Time::Span,
-      @log_level            : Log::Severity,
-      @upstream_mode        : UpstreamMode,
-      @serial_dev           : String,
-      @serial_baud          : Int32
+      @log_level            : Log::Severity
     ); end
   end
 end

@@ -64,5 +64,34 @@ module OGM::Forwarder
       @serial_dev           : String,
       @serial_baud          : Int32
     ); end
+
+    # --- copy-with override ---------------------------------------------------
+    def with(
+      role            : Role? = nil,
+      listen_host     : String? = nil,
+      listen_port     : Int32? = nil,
+      primary         : HostPort? = nil,
+      backup          : HostPort? = nil,
+      connect_timeout : Time::Span? = nil,
+      rw_timeout      : Time::Span? = nil,
+      log_level       : Log::Severity? = nil,
+      upstream_mode   : UpstreamMode? = nil,
+      serial_dev      : String? = nil,
+      serial_baud     : Int32? = nil
+    ) : Config
+      Config.new(
+        role             || @role,
+        listen_host      || @listen_host,
+        listen_port      || @listen_port,
+        primary          || @primary,
+        backup           || @backup,
+        connect_timeout  || @connect_timeout,
+        rw_timeout       || @rw_timeout,
+        log_level        || @log_level,
+        upstream_mode    || @upstream_mode,
+        serial_dev       || @serial_dev,
+        serial_baud      || @serial_baud,
+      )
+    end
   end
 end

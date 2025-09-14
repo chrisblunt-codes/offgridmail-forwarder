@@ -14,6 +14,9 @@ module OGM::Forwarder
     # Defaults are taken from ENV, then overridden by any
     # CLI arguments provided in `argv`.
     def self.parse(argv = ARGV) : Config
+      # Role: TCP (listener) or Serial (pump)
+      role_s = ENV["ROLE"]?               || "listener"
+
       listen_host = ENV["LISTEN_HOST"]?  || "127.0.0.1"
       listen_port = (ENV["LISTEN_PORT"]? || "2525").to_i
 
@@ -43,6 +46,8 @@ module OGM::Forwarder
         p.on("--serial-dev PATH", "Serial device path (or SERIAL_DEV)")     { |v| serial_dev = v }
         p.on("--serial-baud N",   "Serial baud rate (or SERIAL_BAUD)")      { |v| serial_baud = v.to_i }
 
+        p.on("--role ROLE", "listener|pump") { |v| role_s = v }
+
         p.on("-v", "--verbose", "Verbose logging (DEBUG)") { log_level = Log::Severity::Debug }
         p.on("-q", "--quiet",   "Quiet logging (WARN)")    { log_level = Log::Severity::Warn }
         p.on("--silent",        "Minimal logging (ERROR)") { log_level = Log::Severity::Error }
@@ -57,7 +62,10 @@ module OGM::Forwarder
                 STDERR.puts "Unknown mode '#{mode_s}', expected tcp|serial"; exit 2
               end
 
+      role = role_s.downcase == "pump" ? Role::Pump : Role::Listener
+
       Config.new(
+        role:             role,
         listen_host:      listen_host,
         listen_port:      listen_port,
         primary:          HostPort.parse(primary_s),

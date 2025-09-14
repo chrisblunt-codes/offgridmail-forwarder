@@ -41,9 +41,8 @@ module OGM::Forwarder
     end
 
     private def set_timeouts(io : TCPSocket, t : Time::Span)
-      io.tcp_nodelay   = true
-      #io.read_timeout = t
-      #io.write_timeout = t
+      io.read_timeout = t
+      io.write_timeout = t
     end
 
     private def set_timeouts(io : IO, t : Time::Span)
@@ -57,11 +56,11 @@ module OGM::Forwarder
       c2t_done = Channel(Int64).new
       t2c_done = Channel(Int64).new
 
-      # client -> target
       spawn do
         bytes = 0_i64
+
         begin
-          IO.copy(client, target)
+          bytes = IO.copy(client, target)
         rescue ex
           Log.debug { "[##{@id}] c→t ended: #{ex.message}" }
         ensure
@@ -70,11 +69,11 @@ module OGM::Forwarder
         end
       end
 
-      # target -> client
       spawn do
         bytes = 0_i64
+
         begin
-          IO.copy(target, client)
+          bytes = IO.copy(target, client)
         rescue ex
           Log.debug { "[##{@id}] t→c ended: #{ex.message}" }
         ensure

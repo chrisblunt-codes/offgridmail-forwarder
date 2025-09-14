@@ -26,24 +26,36 @@ module OGM::Forwarder
       # default log level (env LOG_LEVEL=debug|info|warn|error|fatal optional)
       log_level = parse_level(ENV["LOG_LEVEL"]?) || Log::Severity::Info
 
-      OptionParser.parse(argv) do |parser|
-        parser.banner = "Usage: ogm_forwarder [options]\n" \
-                        "  --primary host:port  Primary upstream\n" \
-                        "  --backup  host:port  Backup  upstream\n" \
-                        "  -l, --listen HOST    Listen host (default 127.0.0.1)\n" \
-                        "  -p, --port PORT      Listen port (default 2525 or LISTEN_PORT)\n"
+      # upstream mode + serial opts
+      mode_s      = ENV["UPSTREAM_MODE"]? || "tcp"         # tcp|serial
+      serial_dev  = ENV["SERIAL_DEV"]?    || "/dev/ttyUSB0"
+      serial_baud = (ENV["SERIAL_BAUD"]?  || "115200").to_i
 
-        parser.on("-l HOST", "--listen HOST", "Listen host") { |v| listen_host = v }
-        parser.on("-p PORT", "--port PORT",   "Listen port") { |v| listen_port = v.to_i }
-        parser.on("--primary HOST:PORT", "Primary upstream") { |v| primary_s = v }
-        parser.on("--backup HOST:PORT",  "Backup upstream")  { |v| backup_s  = v }
+      OptionParser.parse(argv) do |p|
+        p.banner = "Usage: ogm_forwarder [options]"
 
-        parser.on("-v", "--verbose", "Verbose logging (DEBUG)") { log_level = Log::Severity::Debug }
-        parser.on("-q", "--quiet",   "Quiet logging (WARN)")    { log_level = Log::Severity::Warn }
-        parser.on("--silent",        "Minimal logging (ERROR)") { log_level = Log::Severity::Error }
+        p.on("-l HOST", "--listen HOST", "Listen host (or LISTEN_HOST)") { |v| listen_host = v }
+        p.on("-p PORT", "--port PORT",   "Listen port (or LISTEN_PORT)") { |v| listen_port = v.to_i }
+        p.on("--primary HOST:PORT", "Primary upstream (or PRIMARY)")     { |v| primary_s = v }
+        p.on("--backup HOST:PORT",  "Backup upstream  (or BACKUP)")      { |v| backup_s  = v }
 
-        parser.on("-h", "--help", "Show help") { puts parser; exit 0 }
+        p.on("--mode MODE", "Upstream mode: tcp|serial (or UPSTREAM_MODE)") { |v| mode_s = v }
+        p.on("--serial-dev PATH", "Serial device path (or SERIAL_DEV)")     { |v| serial_dev = v }
+        p.on("--serial-baud N",   "Serial baud rate (or SERIAL_BAUD)")      { |v| serial_baud = v.to_i }
+
+        p.on("-v", "--verbose", "Verbose logging (DEBUG)") { log_level = Log::Severity::Debug }
+        p.on("-q", "--quiet",   "Quiet logging (WARN)")    { log_level = Log::Severity::Warn }
+        p.on("--silent",        "Minimal logging (ERROR)") { log_level = Log::Severity::Error }
+
+        p.on("-h", "--help", "Show help") { puts p; exit 0 }
       end
+
+      mode  = case mode_s.downcase
+              when "tcp"    then UpstreamMode::Tcp
+              when "serial" then UpstreamMode::Serial
+              else
+                STDERR.puts "Unknown mode '#{mode_s}', expected tcp|serial"; exit 2
+              end
 
       Config.new(
         listen_host:      listen_host,
@@ -52,7 +64,10 @@ module OGM::Forwarder
         backup:           HostPort.parse(backup_s),
         connect_timeout:  connect_timeout,
         rw_timeout:       rw_timeout,
-        log_level:        log_level
+        log_level:        log_level,
+        upstream_mode:    mode,
+        serial_dev:       serial_dev,
+        serial_baud:      serial_baud
       )
     end
 

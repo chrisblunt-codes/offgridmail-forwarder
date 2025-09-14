@@ -5,20 +5,17 @@ require "log"
 require "socket"
 
 require "./config"
-require "./upstream"
 
 module OGM::Forwarder
-  # TCP upstream with primary→backup failover.
+  # Chooses and opens an upstream connection (primary → backup).
   class UpstreamSelector
-    include Upstream
-
     getter cfg : Config
 
     def initialize(@cfg : Config)
     end
 
     # Connect to primary first; fallback to backup on failure.
-    def connect : IO
+    def connect : TCPSocket
       begin
         sock = TCPSocket.new(cfg.primary.host, cfg.primary.port,
                              connect_timeout: cfg.connect_timeout)

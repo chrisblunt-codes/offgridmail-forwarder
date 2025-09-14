@@ -24,21 +24,27 @@ module OGM::Forwarder
                    end
 
         listener = Listener.new(cfg, upstream.not_nil!)
+        {% unless flag?(:win32) %}
         Signal::INT.trap  { Log.info { "SIGINT received, shutting down…" };  listener.stop }
         Signal::TERM.trap { Log.info { "SIGTERM received, shutting down…" }; listener.stop }
+        {% end %}
 
+        at_exit { listener.stop }
+        
         listener.run
         listener.wait_for_drain(10.seconds)
         Log.info { "Shutdown complete." }
-
       else # Role::Pump
         # Pump: local serial ↔ remote TCP (failover)
         tcp_upstream = UpstreamSelector.new(cfg) # always TCP here
         pump = SerialTcpPump.new(cfg.serial_dev, cfg.serial_baud, tcp_upstream, cfg.rw_timeout)
 
+        {% unless flag?(:win32) %}
         Signal::INT.trap  { Log.info { "SIGINT received, stopping pump…" };  pump.stop }
         Signal::TERM.trap { Log.info { "SIGTERM received, stopping pump…" }; pump.stop }
+        {% end %}
 
+        at_exit { pump.stop }
         pump.run
       end
     end

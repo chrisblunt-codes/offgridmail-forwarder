@@ -4,40 +4,43 @@
 require "log"
 
 require "./config"
-require "./upstream_selector"
 require "./listener"
+require "./serial_pump"
+require "./serial_upstream"
+require "./upstream_selector"
 
 module OGM::Forwarder
   module App
-    # Starts the forwarder service.
-    #
-    # Opens a TCP server on the configured listen host/port,
-    # accepts incoming client connections, and forwards them
-    # to the primary or backup upstream.
-    #
-    # @param cfg [Config] runtime configuration with listen address,
-    # upstream hosts, and timeouts
     def self.run(cfg : Config)
-      Log.setup do |c|
-        c.bind "*", level: cfg.log_level, backend: Log::IOBackend.new(STDERR)
+      Log.setup { |c| c.bind "*", level: cfg.log_level, backend: Log::IOBackend.new(STDERR) }
+
+      if cfg.role.listener?
+        # Listener: downstream TCP → upstream (TCP or Serial per config)
+        upstream = case cfg.upstream_mode
+                   when UpstreamMode::Tcp
+                     UpstreamSelector.new(cfg)                  # primary → backup
+                   when UpstreamMode::Serial
+                     SerialUpstream.new(cfg.serial_dev, cfg.serial_baud)
+                   end
+
+        listener = Listener.new(cfg, upstream.not_nil!)
+        Signal::INT.trap  { Log.info { "SIGINT received, shutting down…" };  listener.stop }
+        Signal::TERM.trap { Log.info { "SIGTERM received, shutting down…" }; listener.stop }
+
+        listener.run
+        listener.wait_for_drain(10.seconds)
+        Log.info { "Shutdown complete." }
+
+      else # Role::Pump
+        # Pump: local serial ↔ remote TCP (failover)
+        tcp_upstream = UpstreamSelector.new(cfg) # always TCP here
+        pump = SerialTcpPump.new(cfg.serial_dev, cfg.serial_baud, tcp_upstream, cfg.rw_timeout)
+
+        Signal::INT.trap  { Log.info { "SIGINT received, stopping pump…" };  pump.stop }
+        Signal::TERM.trap { Log.info { "SIGTERM received, stopping pump…" }; pump.stop }
+
+        pump.run
       end
-
-      upstream  = case cfg.upstream_mode
-                  when UpstreamMode::Tcp
-                    UpstreamSelector.new(cfg)  # TCP failover (primary → backup)
-                  when UpstreamMode::Serial
-                    SerialUpstream.new(cfg.serial_dev, cfg.serial_baud)
-                  end
-
-      listener = Listener.new(cfg, upstream.not_nil!)
-
-      Signal::INT.trap  { puts "→ SIGINT received, shutting down…";  listener.stop }
-      Signal::TERM.trap { puts "→ SIGTERM received, shutting down…"; listener.stop }
-
-      listener.run
-      # after accept loop exits, wait for a short drain period
-      listener.wait_for_drain(10.seconds)
-      Log.info { "Shutdown complete." }
     end
   end
 end

@@ -10,12 +10,6 @@ module OGM::Forwarder
     Serial
   end
   
-  # Supported roles (Listener - TCP or Pump - Serial)
-  enum Role
-    Listener
-    Pump
-  end
-
   # Represents a host/port pair (e.g. "mail.example.com:25").
   #
   # Parsed from ENV or CLI and used for connecting to upstream servers.
@@ -39,7 +33,6 @@ module OGM::Forwarder
   
   # Collected from ENV and CLI.
   struct Config
-    getter role             : Role
     getter listen_host      : String
     getter listen_port      : Int32
     getter primary          : HostPort
@@ -52,7 +45,6 @@ module OGM::Forwarder
     getter serial_baud      : Int32
 
     def initialize(
-      @role                 : Role,
       @listen_host          : String,
       @listen_port          : Int32,
       @primary              : HostPort,

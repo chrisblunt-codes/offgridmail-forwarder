@@ -22,14 +22,8 @@ module OGM::Forwarder
         c.bind "*", level: cfg.log_level, backend: Log::IOBackend.new(STDERR)
       end
 
-      upstream  = case cfg.upstream_mode
-                  when UpstreamMode::Tcp
-                    UpstreamSelector.new(cfg)  # TCP failover (primary → backup)
-                  when UpstreamMode::Serial
-                    SerialUpstream.new(cfg.serial_dev, cfg.serial_baud)
-                  end
-
-      listener = Listener.new(cfg, upstream.not_nil!)
+      selector = UpstreamSelector.new(cfg)
+      listener = Listener.new(cfg, selector)
 
       Signal::INT.trap  { puts "→ SIGINT received, shutting down…";  listener.stop }
       Signal::TERM.trap { puts "→ SIGTERM received, shutting down…"; listener.stop }

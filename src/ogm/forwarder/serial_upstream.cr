@@ -4,6 +4,7 @@
 require "log"
 
 require "./upstream"
+require "./termios_helpers"
 
 module OGM::Forwarder
   # Minimal serial upstream: opens a device file as IO.
@@ -19,7 +20,9 @@ module OGM::Forwarder
       {% if flag?(:unix) %}
         Log.info { "Opening serial #{@dev} (baud #{@baud})" }
         # Open read/write; assume external config for speed/flags.
-        File.open(@dev, "r+")
+        io = File.open(@dev, "r+")
+        Serial.configure_fd(io.fd, @baud)
+        io
       {% else %}
         raise "SerialUpstream not implemented on this platform yet"
       {% end %}

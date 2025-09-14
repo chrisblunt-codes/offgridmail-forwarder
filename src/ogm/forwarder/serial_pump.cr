@@ -75,6 +75,7 @@ module OGM::Forwarder
         Log.info { "Opening serial #{path} (baud #{baud}) [Windows]" }
         io = File.open(path, "r+")
         SerialWin.configure_file(io, @baud) 
+        io
       {% else %}
         raise "Serial pump not implemented on this platform yet"
       {% end %}
